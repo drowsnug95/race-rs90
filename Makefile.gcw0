@@ -1,7 +1,7 @@
 # Define compilation type
-OSTYPE=msys
+#OSTYPE=msys
 #OSTYPE=oda320
-#OSTYPE=odgcw
+OSTYPE=odgcw
 
 PRGNAME     = race-od
 

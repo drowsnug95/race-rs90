@@ -1,0 +1,6 @@
+title=Race-OD
+description=Neo Geo Pocket Emulator
+exec=/home/retrofw/emus/race-od/race-od.dge
+selectordir=/home/retrofw/roms/ngp
+selectorfilter=.ngp,.npc,.ngc
+clock=600

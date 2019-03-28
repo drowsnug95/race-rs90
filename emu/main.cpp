@@ -19,9 +19,9 @@
 #endif
 #endif
 
-#include <zlib.h>
-
-#include "../opendingux/unzip.h"
+#ifndef TARGET_OD
+#include "unzip.h"
+#endif
 
 #ifndef __GP32__
 #include "StdAfx.h"
@@ -265,6 +265,7 @@ char *getFileNameExtension(char *nom_fichier)		{
 	return ptrPoint;
 }
 
+#ifndef TARGET_OD
 int loadFromZipByName(unsigned char *buffer, char *archive, char *filename, int *filesize)
 {
     char name[_MAX_PATH];
@@ -352,6 +353,7 @@ int loadFromZipByName(unsigned char *buffer, char *archive, char *filename, int 
     memcpy(filename, name, _MAX_PATH);
     return 1;
 }
+#endif
 
 /*
     Verifies if a file is a ZIP archive or not.
@@ -395,6 +397,7 @@ int handleInputFile(char *romName)
 	//if it's a ZIP file, we need to handle that here.
 	iDepth = strrchr2(romName, '.');
 	iDepth++;
+#ifndef TARGET_OD
 	if( ( strcmp( romName + iDepth, "zip" ) == 0 ) || ( strcmp( romName + iDepth, "ZIP" ) == 0 ))
 	{
 		//get ROM from ZIP
@@ -416,6 +419,7 @@ int handleInputFile(char *romName)
 		}
 	}
 	else
+#endif
 	{
 		//get ROM from binary ROM file
 		romFile = fopen(romName, "rb");
@@ -518,6 +522,8 @@ int main(int argc, char *argv[])
         }
         SDL_FillRect(actualScreen, NULL, SDL_MapRGB(screen->format,0,0,0));//fill black
         SDL_Flip(actualScreen);
+        // SDL_FillRect(ScreenScreen, NULL, SDL_MapRGB(screen->format,0,0,0));//fill black
+        // SDL_Flip(ScreenScreen);
 
 //printTTF(romName, 20, TEXT_HEIGHT*16, white, 1, actualScreen, 1);
 

@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
 
 #include "../emu/StdAfx.h"
 #include "../emu/main.h"
@@ -90,5 +91,6 @@ extern void mainemuinit();
 // menu
 extern void screen_showtopmenu(void);
 extern void print_string_video(int x, int y, const char *s);
+extern void print_string_video_for_fps(int x, int y, const char *s);
 
 #endif

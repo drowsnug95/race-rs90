@@ -4,6 +4,9 @@
 unsigned int m_Flag;
 unsigned int interval;
 
+extern void draw_skin();
+extern void screen_flip();
+
 unsigned int gameCRC;
 gamecfg GameConf;
 char gameName[512];
@@ -31,7 +34,7 @@ void graphics_paint(void) {
 	static char buffer[32];
 
 	if(SDL_MUSTLOCK(actualScreen)) SDL_LockSurface(actualScreen);
-	
+		
 	if (GameConf.m_ScreenRatio) { // Full screen
 		x=0;
 		y=0; 
@@ -75,6 +78,7 @@ void graphics_paint(void) {
 			} while (--W);
 			y+=iy;
 			buffer_scr += actualScreen->pitch - 320 - BLIT_WIDTH;
+      // buffer_scr += 320;
 		} while (--H);
 	}
 	
@@ -88,9 +92,9 @@ void graphics_paint(void) {
 
 	if (GameConf.m_DisplayFPS) {
 		sprintf(buffer,"%02d",FPS);
-		print_string_video(xfp,yfp,buffer);
+		print_string_video_for_fps(xfp,yfp,buffer);
 	}
-		
+	
 	if (SDL_MUSTLOCK(actualScreen)) SDL_UnlockSurface(actualScreen);
 	SDL_Flip(actualScreen);
 
@@ -103,7 +107,7 @@ void initSDL(void) {
 	}
 	atexit(SDL_Quit);
 
-	actualScreen = SDL_SetVideoMode(320, 240, 16, SDL_DOUBLEBUF | SDL_HWSURFACE );
+	actualScreen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
 	if(actualScreen == NULL) {
 		fprintf(stderr, "Couldn't set video mode: %s\n", SDL_GetError());
 		exit(1);
@@ -148,8 +152,8 @@ int main(int argc, char *argv[]) {
 	double period;
 
 	// Get init file directory & name
-	getcwd(current_conf_app, MAX__PATH);
-	sprintf(current_conf_app,"%s//race.cfg",current_conf_app);
+	snprintf(current_conf_app, sizeof(current_conf_app), "%s/.race-od", getenv("HOME")); mkdir(current_conf_app, 0777);
+	sprintf(current_conf_app,"%s/race.cfg", current_conf_app);
 	
 	// Init graphics & sound
 	initSDL();
@@ -178,6 +182,7 @@ int main(int argc, char *argv[]) {
 				break;
 
 			case GF_GAMEINIT:
+				draw_skin(); screen_flip(); screen_flip(); screen_flip();
 			    system_sound_chipreset();	//Resets chips
 				handleInputFile(gameName);
 				InitInput(NULL);

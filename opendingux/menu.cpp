@@ -2,9 +2,9 @@
 
 #include "shared.h"
 
-#include "./data/race_background.h"
-#include "./data/race_load.h"
-#include "./data/race_skin.h"
+// #include "./data/race_background.h"
+// #include "./data/race_load.h"
+// #include "./data/race_skin.h"
 
 extern unsigned int m_Flag;
 
@@ -180,37 +180,37 @@ typedef struct {
 	MENUITEM *m; // array of items
 } MENU;
 
-char mnuYesNo[2][16] = {"no", "yes"};
-char mnuRatio[2][16] = { "Original show","Full screen"};
+char mnuYesNo[2][16] = {"No", "Yes"};
+char mnuRatio[2][16] = { "Original","Full"};
 
 char mnuButtons[7][16] = {
   "Up","Down","Left","Right","But #1","But #2", "Options"
 };
 
 MENUITEM MainMenuItems[] = {
-	{"Load rom", NULL, 0, NULL, &menuFileBrowse},
-	{"Continue", NULL, 0, NULL, &menuContinue},
-	{"Reset", NULL, 0, NULL, &menuReset},
-	{"Ratio: ", (int *) &GameConf.m_ScreenRatio, 1, (char *) &mnuRatio, NULL},
-	{"Button Settings", NULL, 0, NULL, &screen_showkeymenu},
-	{"Take Screenshot", NULL, 0, NULL, &menuSaveBmp},
+	{"Scaling: ", (int *) &GameConf.m_ScreenRatio, 1, (char *) &mnuRatio, NULL},
 	{"Show FPS: ", (int *) &GameConf.m_DisplayFPS, 1,(char *) &mnuYesNo, NULL},
+	// {"Screenshot", NULL, 0, NULL, &menuSaveBmp},
+	{"Input Settings", NULL, 0, NULL, &screen_showkeymenu},
+	{"Reset", NULL, 0, NULL, &menuReset},
+	// {"Load rom", NULL, 0, NULL, &menuFileBrowse},
+	// {"Continue", NULL, 0, NULL, &menuContinue},
 	{"Exit", NULL, 0, NULL, &menuQuit}
 };
-MENU mnuMainMenu = { 8, 0, (MENUITEM *) &MainMenuItems };
+MENU mnuMainMenu = { sizeof(MainMenuItems)/sizeof(MainMenuItems[0]), 0, (MENUITEM *) &MainMenuItems };
 
 MENUITEM ConfigMenuItems[] = {
 	{"Button A: ", (int *) &GameConf.OD_Joy[4], 6, (char *)  &mnuButtons, NULL},
 	{"Button B: ", (int *) &GameConf.OD_Joy[5], 6, (char *)  &mnuButtons, NULL},
 	{"Button X: ", (int *) &GameConf.OD_Joy[6], 6, (char *)  &mnuButtons, NULL},
 	{"Button Y: ", (int *) &GameConf.OD_Joy[7], 6, (char *)  &mnuButtons, NULL},
-	{"Button R: ", (int *) &GameConf.OD_Joy[8], 6, (char *)  &mnuButtons, NULL},
 	{"Button L: ", (int *) &GameConf.OD_Joy[9], 6, (char *)  &mnuButtons, NULL},
-	{"START   : ", (int *) &GameConf.OD_Joy[10], 6, (char *) &mnuButtons, NULL},
-	{"SELECT  : ", (int *) &GameConf.OD_Joy[11], 6, (char *) &mnuButtons, NULL},
-	{"Return to menu", NULL, 0, NULL, &menuReturn},
+	{"Button R: ", (int *) &GameConf.OD_Joy[8], 6, (char *)  &mnuButtons, NULL},
+	{"   Start: ", (int *) &GameConf.OD_Joy[10], 6, (char *) &mnuButtons, NULL},
+	{"  Select: ", (int *) &GameConf.OD_Joy[11], 6, (char *) &mnuButtons, NULL},
+	// {"Return", NULL, 0, NULL, &menuReturn},
 };
-MENU mnuConfigMenu = { 9, 0, (MENUITEM *) &ConfigMenuItems };
+MENU mnuConfigMenu = { sizeof(ConfigMenuItems)/sizeof(ConfigMenuItems[0]), 0, (MENUITEM *) &ConfigMenuItems };
 
 //----------------------------------------------------------------------------------------------------
 #if 0
@@ -269,7 +269,7 @@ void screen_showchar(SDL_Surface *s, int x, int y, unsigned char a, int fg_color
 	unsigned short *dst;
 	int w, h;
 
-	//if(SDL_MUSTLOCK(s)) SDL_LockSurface(s);
+	if(SDL_MUSTLOCK(s)) SDL_LockSurface(s);
 	for(h = 8; h; h--) {
 		dst = (unsigned short *)s->pixels + (y+8-h)*s->w + x;
 		for(w = 8; w; w--) {
@@ -277,6 +277,33 @@ void screen_showchar(SDL_Surface *s, int x, int y, unsigned char a, int fg_color
 			if((fontdata8x8[a*8 + (8-h)] >> w) & 1) color = fg_color;
 			*dst++ = color;
 		}
+	}
+	if(SDL_MUSTLOCK(s)) SDL_UnlockSurface(s);
+}
+
+void screen_showchar_for_fps(SDL_Surface *s, int x, int y, unsigned char a, int fg_color, int bg_color) {
+	unsigned short *dst;
+	int w, h;
+
+	//if(SDL_MUSTLOCK(s)) SDL_LockSurface(s);
+	for(h = 8; h; h--) {
+		dst = (unsigned short *)s->pixels + (y+8-h)*s->w + x;
+		for(w = 8; w; w--) {
+			unsigned short color = *dst; // background
+			if((fontdata8x8[a*8 + (8-h)] >> w) & 1) color = fg_color;
+			*dst++ = 0;
+		}
+    // dst+= 320;
+	}
+
+	for(h = 8; h; h--) {
+		dst = (unsigned short *)s->pixels + (y+8-h)*s->w + x;
+		for(w = 8; w; w--) {
+			unsigned short color = *dst; // background
+			if((fontdata8x8[a*8 + (8-h)] >> w) & 1) color = fg_color;
+			*dst++ = color;
+		}
+    // dst+= 320;
 	}
 	//if(SDL_MUSTLOCK(s)) SDL_UnlockSurface(s);
 }
@@ -288,6 +315,11 @@ void print_string(const char *s, unsigned short fg_color, unsigned short bg_colo
 }
 
 void print_string_video(int x, int y, const char *s) {
+	int i, j = strlen(s);
+	for(i = 0; i < j; i++, x += 8) screen_showchar(actualScreen, x, y, s[i], PIX_TO_RGB(actualScreen->format,232, 253, 77), 0);
+}
+
+void print_string_video_for_fps(int x, int y, const char *s) {
 	int i, j = strlen(s);
 	for(i = 0; i < j; i++, x += 8) screen_showchar(actualScreen, x, y, s[i], PIX_TO_RGB(actualScreen->format,232, 253, 77), 0);
 }
@@ -329,23 +361,23 @@ void screen_showmenu(MENU *menu) {
 }
 
 // draw default emulator design
-void screen_prepback(SDL_Surface *s, unsigned char *bmpBuf, unsigned int bmpSize) {
+void screen_prepback(SDL_Surface *s, const char *img) {
 	// load logo, Convert the image to optimal display format and Free the temporary surface
-	SDL_RWops *rw = SDL_RWFromMem(bmpBuf, bmpSize);
-	SDL_Surface *temp = SDL_LoadBMP_RW(rw, 1);
-	SDL_Surface *image;
-	image = SDL_DisplayFormat(temp);
+	SDL_Surface *temp = IMG_Load(img);
+	SDL_Surface *image = SDL_DisplayFormat(temp);
 	SDL_FreeSurface(temp);
 	
 	// Display image
- 	SDL_BlitSurface(image, 0, s, 0);
+	SDL_BlitSurface(image, 0, s, 0);
+	// SDL_SoftStretch(image, NULL, s, NULL);
 	SDL_FreeSurface(image);
 }
 
 // draw main emulator design
 void screen_prepbackground(void) {
 	// draw default background
-	screen_prepback(layerbackgrey, RACE_BACKGROUND, RACE_BACKGROUND_SIZE);
+	// screen_prepback(layerbackgrey, RACE_BACKGROUND, RACE_BACKGROUND_SIZE);
+	screen_prepback(layerbackgrey, "./race_background.png");
 }
 
 // wait for a key
@@ -375,6 +407,18 @@ void screen_waitkeyarelease(void) {
 void screen_flip(void) {
 	SDL_BlitSurface(layer, 0, actualScreen, 0);
 	SDL_Flip(actualScreen);
+	
+	// int x, y;
+ //  uint32_t *s = (uint32_t*)layer->pixels;
+ //  uint32_t *d = (uint32_t*)actualScreen->pixels;
+
+ //  for(y=0; y<240; y++){
+ //    for(x=0; x<160; x++){
+ //      *d++ = *s++;
+ //    }
+ //    d+= 160;
+ //  }
+	// SDL_Flip(actualScreen);
 }
 
 // Main function that runs all the stuff
@@ -413,7 +457,9 @@ void screen_showmainmenu(MENU *menu) {
 		// B - exit or back to previous menu
 		if (keys[SDLK_LALT] == SDL_PRESSED) { 
 			if (!keyb) {
-				keyb = 1; if (menu != &mnuMainMenu) gameMenu = false;
+				keyb = 1;
+				if (menu == &mnuMainMenu) menuContinue();
+				else gameMenu = false;
 			}
 		}
 		else keyb=0;
@@ -492,10 +538,20 @@ void screen_showkeymenu(void) {
 	screen_showmainmenu(&mnuConfigMenu);
 }
 
+
+void draw_skin(void)
+{
+	// if no ratio, put skin
+	if (!GameConf.m_ScreenRatio) {
+		// screen_prepback(layer, RACE_SKIN, RACE_SKIN_SIZE);
+		screen_prepback(layer, "./race_skin.png");
+	}
+}
+
 // Menu function that runs main top menu
 void screen_showtopmenu(void) {
 	// Save screen in layer
-	SDL_BlitSurface(actualScreen, 0, layerback, 0);
+	// SDL_BlitSurface(actualScreen, NULL, layerback, NULL);
 	screen_prepbackground();
 
 	// Display and manage main menu
@@ -504,13 +560,11 @@ void screen_showtopmenu(void) {
 	// save actual config
 	system_savecfg(current_conf_app);
 
+	draw_skin(); screen_flip(); screen_flip(); screen_flip();
 	// if no ratio, put skin
-	if (!GameConf.m_ScreenRatio) {
-		screen_prepback(actualScreen, RACE_SKIN, RACE_SKIN_SIZE);
-		SDL_Flip(actualScreen);
-		screen_prepback(actualScreen, RACE_SKIN, RACE_SKIN_SIZE);
-		SDL_Flip(actualScreen);
-	}
+	// if (!GameConf.m_ScreenRatio) {
+	// 	screen_prepback(actualScreen, RACE_SKIN, RACE_SKIN_SIZE);
+	// }
 }
 
 //----------------------------------------------------------------------
@@ -591,18 +645,6 @@ int sort_function(const void *src_str_ptr, const void *dest_str_ptr) {
   return strcmp (p1->name, p2->name);
 }
 
-int strcmp_function(char *s1, char *s2) {
-	char c,i;
-	
-	if (strlen(s1) != strlen(s2)) return 1;
-
-	for(i=0; i<strlen(s1); i++) {
-		if (toupper(s1[i]) != toupper(s2[i])) 
-			return 1;
-    }
-	return 0;
-}
-
 signed int load_file(char **wildcards, char *result) {
 	unsigned char *keys;
 	unsigned int keya=0, keyb=0, keyup=0, kepufl=8, keydown=0, kepdfl=8, keyleft=0, keyright=0, keyr=0, keyl=0;
@@ -631,6 +673,7 @@ signed int load_file(char **wildcards, char *result) {
 	// Init dir with saved one
 	strcpy(current_dir_name,GameConf.current_dir_rom);
 	chdir(GameConf.current_dir_rom);
+	//current_dir = opendir(current_dir_name);
 
 	while (return_value == 1) {
 		current_filedir_in_scroll = 0;
@@ -662,15 +705,14 @@ signed int load_file(char **wildcards, char *result) {
 							else if(file_name[file_name_length - 3] == '.') ext_pos = file_name_length - 3;
 							else ext_pos = 0;
 
-							for(i = 0; wildcards[i] != NULL; i++) {
-								if(!strcmp_function((file_name + ext_pos), wildcards[i])) {
-									filedir_list[num_filedir].type = 0; // 0 -> file
-									strcpy(filedir_list[num_filedir].name, file_name);
-									num_filedir++;
-
-									break;
-								}
-							}
+              for(i = 0; wildcards[i] != NULL; i++) {
+                if(!strcasecmp((file_name + ext_pos), wildcards[i])) {
+                  filedir_list[num_filedir].type = 0; // 0 -> file
+                  strcpy(filedir_list[num_filedir].name, file_name);
+                  num_filedir++;
+                  break;
+                }
+              }
 						}
 					}
 				}
@@ -697,7 +739,8 @@ signed int load_file(char **wildcards, char *result) {
 
 		while(repeat) {
 			//SDL_FillRect(layer, NULL, COLOR_BG);
-			screen_prepback(layer, RACE_LOAD, RACE_LOAD_SIZE);
+			// screen_prepback(layer, RACE_LOAD, RACE_LOAD_SIZE);
+			screen_prepback(layer, "./race_load.png");
 			print_string(current_dir_short, COLOR_ACTIVE_ITEM, COLOR_BG, 4, 10*3);
 			print_string("Press B to return to the main menu", COLOR_HELP_TEXT, COLOR_BG, 160-(34*8/2), 240-5 -10*3);
 			for(i = 0, current_filedir_number = i + current_filedir_scroll_value; i < FILE_LIST_ROWS; i++, current_filedir_number++) {
@@ -838,7 +881,7 @@ signed int load_file(char **wildcards, char *result) {
 	return return_value;
 }
 
-char *file_ext[] = { (char *) ".ngp", (char *) ".npc", (char *) ".ngc", (char *) ".zip", NULL };
+char *file_ext[] = { (char *) ".ngp", (char *) ".npc", (char *) ".ngc", NULL };
 
 void menuFileBrowse(void) {
 	if (load_file(file_ext, gameName) != -1) { // exit if file is chosen
@@ -849,13 +892,13 @@ void menuFileBrowse(void) {
 
 // Take a screenshot of current game
 void menuSaveBmp(void) {
-    char szFile[512], szFile1[512];
+    char szFile[MAX__PATH], szFile1[MAX__PATH];
 	
 	if (cartridge_IsLoaded()) {
 #ifdef _OPENDINGUX_
-		sprintf(szFile,"./%s",strrchr(gameName,'/')+1);
+		sprintf(szFile,"%s",strrchr(gameName,'/')+1);
 #else
-		sprintf(szFile,".\\%s",strrchr(gameName,'\\')+1);
+		sprintf(szFile,"%s",strrchr(gameName,'\\')+1);
 #endif
 		szFile[strlen(szFile)-8] = '%';
 		szFile[strlen(szFile)-7] = '0';
@@ -869,7 +912,10 @@ void menuSaveBmp(void) {
 		print_string("Saving...", COLOR_OK, COLOR_BG, 8,240-5 -10*3);
 		screen_flip();
 		findNextFilename(szFile,szFile1);
-		SDL_SaveBMP(layerback, szFile1);
+
+		sprintf(szFile, "%s/.race-od/%s", getenv("HOME"), szFile1);
+
+		SDL_SaveBMP(layerback, szFile);
 		print_string("Screen saved !", COLOR_OK, COLOR_BG, 8+10*8,240-5 -10*3);
 		screen_flip();
 		screen_waitkey();
@@ -921,28 +967,22 @@ void system_loadcfg(char *cfg_name) {
   if (fd >= 0) {
 	read(fd, &GameConf, sizeof(GameConf));
     close(fd);
-	if (!GameConf.m_ScreenRatio) {
-		screen_prepback(actualScreen, RACE_SKIN, RACE_SKIN_SIZE);
-		SDL_Flip(actualScreen);
-		screen_prepback(actualScreen, RACE_SKIN, RACE_SKIN_SIZE);
-		SDL_Flip(actualScreen);
-	}
   }
   else {
-	  // UP  DOWN  LEFT RIGHT  A  B  X  Y  R  L  START  SELECT
-	  //  0,    1,    2,    3, 4, 5, 4, 5, 4, 5,     6,      6
-		GameConf.OD_Joy[ 0] = 0;  GameConf.OD_Joy[ 1] = 1;
-		GameConf.OD_Joy[ 2] = 2;  GameConf.OD_Joy[ 3] = 3;
-		GameConf.OD_Joy[ 4] = 4;  GameConf.OD_Joy[ 5] = 5;
-		GameConf.OD_Joy[ 6] = 4;  GameConf.OD_Joy[ 7] = 5;
-		GameConf.OD_Joy[ 8] = 4;  GameConf.OD_Joy[ 9] = 5;
-		GameConf.OD_Joy[10] = 6;  GameConf.OD_Joy[11] = 6;
-	   
-		GameConf.sndLevel=40;
-		GameConf.m_ScreenRatio=1; // 0 = original show, 1 = full screen
-		GameConf.m_DisplayFPS=1; // 0 = no
-		getcwd(GameConf.current_dir_rom, MAX__PATH);
-	}
+  // UP  DOWN  LEFT RIGHT  A  B  X  Y  R  L  START  SELECT
+  //  0,    1,    2,    3, 4, 5, 4, 5, 4, 5,     6,      6
+    GameConf.OD_Joy[ 0] = 0;  GameConf.OD_Joy[ 1] = 1;
+    GameConf.OD_Joy[ 2] = 2;  GameConf.OD_Joy[ 3] = 3;
+    GameConf.OD_Joy[ 4] = 4;  GameConf.OD_Joy[ 5] = 5;
+    GameConf.OD_Joy[ 6] = 4;  GameConf.OD_Joy[ 7] = 5;
+    GameConf.OD_Joy[ 8] = 4;  GameConf.OD_Joy[ 9] = 5;
+    GameConf.OD_Joy[10] = 6;  GameConf.OD_Joy[11] = 6;
+   
+    GameConf.sndLevel=40;
+    GameConf.m_ScreenRatio=0; // 0 = original show, 1 = full screen
+    GameConf.m_DisplayFPS=0; // 0 = no
+	getcwd(GameConf.current_dir_rom, MAX__PATH);
+}
 }
 
 void system_savecfg(char *cfg_name) {

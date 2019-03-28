@@ -349,8 +349,7 @@ void (*palette_init)(DWORD dwRBitMask, DWORD dwGBitMask, DWORD dwBBitMask);
 
 void palette_init32(DWORD dwRBitMask, DWORD dwGBitMask, DWORD dwBBitMask)
 {
-/*
-//    dbg_print("in palette_init32(0x%X, 0x%X, 0x%X)\n", dwRBitMask, dwGBitMask, dwBBitMask);
+/*    dbg_print("in palette_init32(0x%X, 0x%X, 0x%X)\n", dwRBitMask, dwGBitMask, dwBBitMask);
 
     char RShiftCount = 0, GShiftCount = 0, BShiftCount = 0;
     char RBitCount = 0, GBitCount = 0, BBitCount = 0;
@@ -394,6 +393,11 @@ void palette_init32(DWORD dwRBitMask, DWORD dwGBitMask, DWORD dwBBitMask)
     {
         case NGP:
         case NGPC:
+        case GAMEGEAR:
+        case LYNX:
+        case WONDERSWAN:
+        case WONDERSWANCOLOR:
+        case ADVISION:
         for (b=0; b<16; b++)
             for (g=0; g<16; g++)
                 for (r=0; r<16; r++)
@@ -402,8 +406,21 @@ void palette_init32(DWORD dwRBitMask, DWORD dwGBitMask, DWORD dwBBitMask)
                         (((g<<(GBitCount-4))+(g>>(4-(GBitCount-4))))<<GShiftCount) +
                         (((r<<(RBitCount-4))+(r>>(4-(RBitCount-4))))<<RShiftCount);
         break;
-    }
-*/
+        case GAMEBOY:
+        case GAMEBOYPOCKET:
+        case GAMEBOYCOLOR:
+        case SUPERGAMEBOY:
+        case SUPERVISION:
+        case NES:
+        for (b=0; b<32; b++)
+            for (g=0; g<32; g++)
+                for (r=0; r<32; r++)
+                    totalpalette[b*32*32+g*32+r] =
+                        (((b<<(BBitCount-5))+(b>>(5-(BBitCount-5))))<<BShiftCount) +
+                        (((g<<(GBitCount-5))+(g>>(5-(GBitCount-5))))<<GShiftCount) +
+                        (((r<<(RBitCount-5))+(r>>(5-(RBitCount-5))))<<RShiftCount);
+        break;
+    }*/
 }
 
 void palette_init16(DWORD dwRBitMask, DWORD dwGBitMask, DWORD dwBBitMask)
@@ -1657,7 +1674,8 @@ BOOL graphics_init(HWND phWnd)
 
 #ifdef TARGET_OD
     palette_init = palette_init16;
-    palette_init(screen->format->Rmask,screen->format->Gmask, screen->format->Bmask);
+    palette_init(screen->format->Rmask,
+                 screen->format->Gmask, screen->format->Bmask);
 	drawBuffer = (unsigned short*)screen->pixels;
 #elif TARGET_PSP
     palette_init = palette_init16;

@@ -1768,7 +1768,6 @@ int ldMR30W()
 }
 int ldMR30L()
 {
-	if (mem<0x38000) // ALEK Bug for MSG2, WHY o_O ?
     mem_writeL(mem,*cregsL[lastbyte&7]);
     return 6;
 }
@@ -8954,9 +8953,9 @@ int ngOverflow = 0;
 #endif
 
 #ifdef AUTO_FRAMESKIP
-inline void tlcs_execute(int cycles, int skipFrames)// skipFrames=how many frames to skip for each frame rendered
+void tlcs_execute(int cycles, int skipFrames)// skipFrames=how many frames to skip for each frame rendered
 #else
-inline void tlcs_execute(int cycles)
+void tlcs_execute(int cycles)
 #endif
 {
     int elapsed;
@@ -9075,7 +9074,6 @@ inline void tlcs_execute(int cycles)
 
     return;
 }
-
 
 //Flavor, this auto-frameskip code is messed up
 void ngpc_run()

@@ -24,14 +24,6 @@ Lots of the NeoGeo POcket games ;), except Metal Slug2 yet :(
 --------------------------------------------------------------------------------
 History :
 --------------------------------------------------------------------------------
-V1.1 :
-  Add .ngc file extension
-  Fix bug with uppercase/lowercase names
-  Fix bug with skin if automatic launch of game
-  Save current rom directory
-  Zip support
-  Clean up makefile
-
 V1.0 : 17/10/2012
   Initiale release
 
