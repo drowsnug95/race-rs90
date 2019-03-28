@@ -1,5 +1,8 @@
 #include  <sys/time.h>
 
+#define BLIT_WIDTH  160
+#define BLIT_HEIGHT 152
+
 #include "shared.h"
 unsigned int m_Flag;
 unsigned int interval;
@@ -23,7 +26,7 @@ unsigned char system_frameskip_key = 0;
 unsigned long SDL_UXTimerRead(void) {
 	struct timeval tval; // timing
   
-  	gettimeofday(&tval, 0);
+	gettimeofday(&tval, 0);
 	return (((tval.tv_sec*1000000) + (tval.tv_usec )));
 }
 
@@ -56,30 +59,17 @@ void graphics_paint(void) {
 		} while (--H);
 	}
 	else { // Original show
-		#define BLIT_WIDTH (160)
-		#define BLIT_HEIGHT (152)
-		x=((screen->w - BLIT_WIDTH)/2);
-		y=((screen->h - BLIT_HEIGHT)/2); 
-		W=BLIT_WIDTH;
-		H=BLIT_HEIGHT;
-		ix=(BLIT_WIDTH<<16)/W;
-		iy=(SYSVID_HEIGHT<<16)/H;
-		xfp = (x+BLIT_WIDTH)-20;yfp = y+1;
-		
-		buffer_scr += (y)*320;
-		buffer_scr += (x);
-		do   
+		xfp = (actualScreen->w - BLIT_WIDTH) / 2;
+		yfp = (actualScreen->h - BLIT_HEIGHT) / 2;
+
+		uint16_t *d = (uint16_t*)actualScreen->pixels + xfp + yfp * actualScreen->pitch / 2 ;
+		uint16_t *s = (uint16_t*)buffer_flip;
+		for (int y = 0; y < BLIT_HEIGHT; y++)
 		{
-			unsigned short *buffer_mem=(buffer_flip+((y>>16)*320));
-			W=BLIT_WIDTH; x=((screen->w - BLIT_WIDTH)/2);
-			do {
-				*buffer_scr++=buffer_mem[x>>16];
-				x+=ix;
-			} while (--W);
-			y+=iy;
-			buffer_scr += actualScreen->pitch - 320 - BLIT_WIDTH;
-      // buffer_scr += 320;
-		} while (--H);
+			memmove(d, s, BLIT_WIDTH * sizeof(uint16_t));
+			s += screen->w;
+			d += actualScreen->w;
+		}
 	}
 	
 	pastFPS++;
@@ -92,7 +82,7 @@ void graphics_paint(void) {
 
 	if (GameConf.m_DisplayFPS) {
 		sprintf(buffer,"%02d",FPS);
-		print_string_video_for_fps(xfp,yfp,buffer);
+		print_string_video_for_fps(xfp + 1,yfp + 1,buffer);
 	}
 	
 	if (SDL_MUSTLOCK(actualScreen)) SDL_UnlockSurface(actualScreen);
@@ -114,14 +104,14 @@ void initSDL(void) {
 	}
 	SDL_ShowCursor(SDL_DISABLE);
 
-    screen = SDL_CreateRGBSurface (actualScreen->flags,
-                                actualScreen->w,
-                                actualScreen->h,
-                                actualScreen->format->BitsPerPixel,
-                                actualScreen->format->Rmask,
-                                actualScreen->format->Gmask,
-                                actualScreen->format->Bmask,
-                                actualScreen->format->Amask);
+	screen = SDL_CreateRGBSurface (actualScreen->flags,
+								actualScreen->w,
+								actualScreen->h,
+								actualScreen->format->BitsPerPixel,
+								actualScreen->format->Rmask,
+								actualScreen->format->Gmask,
+								actualScreen->format->Bmask,
+								actualScreen->format->Amask);
 								
 	if(screen == NULL) {
 		fprintf(stderr, "Couldn't create surface: %s\n", SDL_GetError());
@@ -164,7 +154,7 @@ int main(int argc, char *argv[]) {
 
 	SDL_WM_SetCaption("race", NULL);
 
-    //load rom file via args if a rom path is supplied
+	//load rom file via args if a rom path is supplied
 	if(argc > 1) {
 		strcpy(gameName,argv[1]);
 		m_Flag = GF_GAMEINIT;
@@ -183,7 +173,7 @@ int main(int argc, char *argv[]) {
 
 			case GF_GAMEINIT:
 				draw_skin(); screen_flip(); screen_flip(); screen_flip();
-			    system_sound_chipreset();	//Resets chips
+				system_sound_chipreset();	//Resets chips
 				handleInputFile(gameName);
 				InitInput(NULL);
 				m_Flag = GF_GAMERUNNING;
@@ -293,11 +283,11 @@ unsigned long crc32 (unsigned int crc, const unsigned char *buf, unsigned int le
   if (buf == 0) return 0L;
   crc = crc ^ 0xffffffffL;
   while (len >= 8) {
-    DO8(buf);
-    len -= 8;
+	DO8(buf);
+	len -= 8;
   }
   if (len) do {
-    DO1(buf);
+	DO1(buf);
   } while (--len);
   return crc ^ 0xffffffffL;
 }
