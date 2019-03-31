@@ -321,7 +321,10 @@ void print_string_video(int x, int y, const char *s) {
 
 void print_string_video_for_fps(int x, int y, const char *s) {
 	int i, j = strlen(s);
-	for(i = 0; i < j; i++, x += 8) screen_showchar(actualScreen, x, y, s[i], PIX_TO_RGB(actualScreen->format,232, 253, 77), 0);
+	for(i = 0; i < j; i++, x += 8) {
+		screen_showchar(actualScreen, x+1, y+1, s[i], PIX_TO_RGB(actualScreen->format, 0, 0, 0), 0);
+		screen_showchar(actualScreen, x, y, s[i], PIX_TO_RGB(actualScreen->format, 232, 253, 77), 0);
+	}
 }
 
 void screen_showitem(int x, int y, MENUITEM *m, int fg_color) {
