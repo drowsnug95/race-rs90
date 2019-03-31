@@ -180,16 +180,16 @@ typedef struct {
 	MENUITEM *m; // array of items
 } MENU;
 
-char mnuYesNo[2][16] = {"No", "Yes"};
-char mnuRatio[2][16] = { "Original","Full"};
+char mnuYesNo[2][16] = {"No", "Yes" };
+char mnuRatio[3][16] = { "Original", "x1.5", "Full"};
 
 char mnuButtons[7][16] = {
   "Up","Down","Left","Right","But #1","But #2", "Options"
 };
 
 MENUITEM MainMenuItems[] = {
-	{"Scaling: ", (int *) &GameConf.m_ScreenRatio, 1, (char *) &mnuRatio, NULL},
-	{"Show FPS: ", (int *) &GameConf.m_DisplayFPS, 1,(char *) &mnuYesNo, NULL},
+	{"Scaling: ", (int *) &GameConf.m_ScreenRatio, 2, (char *) &mnuRatio, NULL},
+	{"Show FPS: ", (int *) &GameConf.m_DisplayFPS, 1, (char *) &mnuYesNo, NULL},
 	// {"Screenshot", NULL, 0, NULL, &menuSaveBmp},
 	{"Input Settings", NULL, 0, NULL, &screen_showkeymenu},
 	{"Reset", NULL, 0, NULL, &menuReset},
@@ -541,6 +541,7 @@ void screen_showkeymenu(void) {
 
 void draw_skin(void)
 {
+	SDL_FillRect(layer, NULL, 0x000000);
 	// if no ratio, put skin
 	if (!GameConf.m_ScreenRatio) {
 		// screen_prepback(layer, RACE_SKIN, RACE_SKIN_SIZE);
@@ -979,7 +980,7 @@ void system_loadcfg(char *cfg_name) {
     GameConf.OD_Joy[10] = 6;  GameConf.OD_Joy[11] = 6;
    
     GameConf.sndLevel=40;
-    GameConf.m_ScreenRatio=0; // 0 = original show, 1 = full screen
+    GameConf.m_ScreenRatio=0; // 0 = original show, 1 = 1.5x, 2 = full screen
     GameConf.m_DisplayFPS=0; // 0 = no
 	getcwd(GameConf.current_dir_rom, MAX__PATH);
 }

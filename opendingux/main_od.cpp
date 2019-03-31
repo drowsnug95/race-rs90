@@ -30,10 +30,50 @@ unsigned long SDL_UXTimerRead(void) {
 }
 
 #define AVERAGE(z, x) ((((z) & 0xF7DEF7DE) >> 1) + (((x) & 0xF7DEF7DE) >> 1))
+#define AVERAGEHI(AB) ((((AB) & 0xF7DE0000) >> 1) + (((AB) & 0xF7DE) << 15))
+#define AVERAGELO(CD) ((((CD) & 0xF7DE) >> 1) + (((CD) & 0xF7DE0000) >> 17))
 
-void upscale_160xXXX_to_320x240(uint32_t* dst, uint32_t* src)
+void upscale_to_x15(uint32_t *dst, uint32_t *src)
 {
-	uint32_t width = 320;
+	uint32_t midh = 228 / 2;
+	uint32_t Eh = 0;
+	uint32_t source = 0;
+	uint32_t dh = 0;
+	uint32_t y, x;
+
+	dst += ((320 - 240) + 320 * (240 - 228)) / 4;
+
+	for (y = 0; y < 228; y++)
+	{
+		source = dh * 320 / 2;
+
+		for (x = 0; x < 240/6; x++)
+		{
+			__builtin_prefetch(dst + 4, 1);
+			__builtin_prefetch(src + source + 4, 0);
+
+			register uint32_t ab = src[source] & 0xF7DEF7DE;
+			register uint32_t cd = src[source + 1] & 0xF7DEF7DE;
+
+			if(Eh >= midh) {
+				ab = AVERAGE(ab, src[source + 320/2]) & 0xF7DEF7DE; // to prevent overflow
+				cd = AVERAGE(cd, src[source + 320/2 + 1]) & 0xF7DEF7DE; // to prevent overflow
+			}
+
+			*dst++ = (ab & 0xFFFF) + AVERAGEHI(ab);
+			*dst++ = (ab >> 16) + ((cd & 0xFFFF) << 16);
+			*dst++ = (cd & 0xFFFF0000) + AVERAGELO(cd);
+
+			source += 2;
+		}
+
+		dst += (320 - 240) / 2;
+		Eh += 152; if(Eh >= 228) { Eh -= 228; dh++; }
+	}
+}
+
+void upscale_to_320x240(uint32_t* dst, uint32_t* src)
+{
 	uint32_t midh = 240 / 2;
 	uint32_t Eh = 0;
 	uint32_t source = 0;
@@ -42,18 +82,18 @@ void upscale_160xXXX_to_320x240(uint32_t* dst, uint32_t* src)
 		
 	for (i = 0; i < 240; i++)
 	{
-		source = dh * width / 2;
+		source = dh * 320 / 2;
 		for (j = 0; j < 320/8; j++)
 		{
 			__builtin_prefetch(dst + 4, 1);
 			__builtin_prefetch(src + source + 4, 0);
 		
-			uint32_t ab = src[source] & 0xF7DEF7DE;
-			uint32_t cd = src[source + 1] & 0xF7DEF7DE;
+			register uint32_t ab = src[source] & 0xF7DEF7DE;
+			register uint32_t cd = src[source + 1] & 0xF7DEF7DE;
 
-			if(Eh >= midh) {
-				ab = AVERAGE(ab, src[source+width/2]);
-				cd = AVERAGE(cd, src[source+width/2+1]);
+			if (Eh >= midh) {
+				ab = AVERAGE(ab, src[source + 320/2]) & 0xF7DEF7DE; // to prevent overflow
+				cd = AVERAGE(cd, src[source + 320/2 + 1]) & 0xF7DEF7DE; // to prevent overflow
 			}
 		
 			*dst++ = (ab & 0xFFFF) | (ab << 16);
@@ -72,23 +112,30 @@ void graphics_paint(void) {
 	unsigned int xfp = 1,yfp = 1;
 	static char buffer[32];
 
-	if(SDL_MUSTLOCK(actualScreen)) SDL_LockSurface(actualScreen);
-		
-	if (GameConf.m_ScreenRatio) { // Full screen
-		upscale_160xXXX_to_320x240((uint32_t*)actualScreen->pixels, (uint32_t*)screen->pixels);
-	}
-	else { // Original show
-		xfp = (actualScreen->w - BLIT_WIDTH) / 2;
-		yfp = (actualScreen->h - BLIT_HEIGHT) / 2;
+	if (SDL_MUSTLOCK(actualScreen)) SDL_LockSurface(actualScreen);
 
-		uint16_t *d = (uint16_t*)actualScreen->pixels + xfp + yfp * actualScreen->pitch / 2 ;
-		uint16_t *s = (uint16_t*)screen->pixels;
-		for (int y = 0; y < BLIT_HEIGHT; y++)
-		{
-			memmove(d, s, BLIT_WIDTH * sizeof(uint16_t));
-			s += screen->w;
-			d += actualScreen->w;
-		}
+	switch (GameConf.m_ScreenRatio) {
+		case 2: // Full screen
+			upscale_to_320x240((uint32_t*)actualScreen->pixels, (uint32_t*)screen->pixels);
+			break;
+		case 1: // x1.5
+			xfp = (320 - 240) / 2;
+			yfp = (240 - 228) / 2;
+
+			upscale_to_x15((uint32_t*)actualScreen->pixels, (uint32_t*)screen->pixels);
+			break;
+		default: // Original
+			xfp = (actualScreen->w - BLIT_WIDTH) / 2;
+			yfp = (actualScreen->h - BLIT_HEIGHT) / 2;
+
+			uint16_t *d = (uint16_t*)actualScreen->pixels + xfp + yfp * actualScreen->pitch / 2 ;
+			uint16_t *s = (uint16_t*)screen->pixels;
+			for (int y = 0; y < BLIT_HEIGHT; y++)
+			{
+				memmove(d, s, BLIT_WIDTH * sizeof(uint16_t));
+				s += screen->w;
+				d += actualScreen->w;
+			}
 	}
 			
 	pastFPS++;
@@ -116,7 +163,13 @@ void initSDL(void) {
 	}
 	atexit(SDL_Quit);
 
-	actualScreen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | SDL_TRIPLEBUF);
+	actualScreen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | 
+	#ifdef SDL_TRIPLEBUF
+		SDL_TRIPLEBUF
+	#else
+		SDL_DOUBLEBUF
+	#endif
+	);
 	if(actualScreen == NULL) {
 		fprintf(stderr, "Couldn't set video mode: %s\n", SDL_GetError());
 		exit(1);
