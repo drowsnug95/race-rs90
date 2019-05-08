@@ -19,8 +19,9 @@
 #include "flash.h"
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
-//#define DEBUG_FLASH
+// #define DEBUG_FLASH
 #ifdef DEBUG_FLASH
 FILE *debugFile = NULL;
 #define stderr debugFile
@@ -202,14 +203,15 @@ void setupNGFfilename()
     {
 #ifdef DEBUG_FLASH
 		fprintf(debugFile, "setupNGFfilename: %s file already opened\n", ngfFilename);
-        return;  //already set up
 #endif
+        return;  //already set up
     }
 
-#ifdef TARGET_OD
-	strcpy(ngfFilename, m_emuInfo.RomFileName);
-#else
-    strcpy(ngfFilename, SAVEGAME_DIR);
+// #ifdef TARGET_OD
+	// strcpy(ngfFilename, m_emuInfo.RomFileName);
+// #else
+	sprintf(ngfFilename, "%s/.race-od/%s", getenv("HOME"), SAVEGAME_DIR);
+	mkdir(ngfFilename, 0777);
 
     pos = strlen(m_emuInfo.RomFileName);
 
@@ -225,7 +227,7 @@ void setupNGFfilename()
     }
 
 	strcat(ngfFilename, &m_emuInfo.RomFileName[slashSpot+1]);
-#endif
+// #endif
 
 	for(pos=strlen(ngfFilename);pos>=0 && dotSpot == -1; pos--)
 	{
@@ -531,7 +533,6 @@ void flashWriteByte(unsigned long addr, unsigned char data, unsigned char operat
 	}
 	else
 		return;  //panic
-
 	//changed to &= because it's actually how flash works
 	//flash memory can be erased (changed to 0xFF)
 	//and when written, 1s can become 0s, but you can't turn 0s into 1s (except by erasing)
