@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Race-OD
+Comment=Neo Geo Pocket Emulator
+Exec=race-od.dge %f
+Icon=race-od
+Categories=emulators;
+X-OD-Manual=race-od.man.txt
+X-OD-Filter=.ngp,.npc,.ngc
+Terminal=false
+Type=Application
+StartupNotify=true
