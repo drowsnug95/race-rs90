@@ -181,16 +181,19 @@ typedef struct {
 } MENU;
 
 char mnuYesNo[2][16] = {"No", "Yes" };
-char mnuRatio[3][16] = { "Original", "x1.5", "Full"};
+char mnuRatio[3][16] = { "Original", "x1.5" /*, "Full"*/};
 
 char mnuButtons[7][16] = {
   "Up","Down","Left","Right","But #1","But #2", "Options"
 };
 
 MENUITEM MainMenuItems[] = {
-	{"Scaling: ", (int *) &GameConf.m_ScreenRatio, 2, (char *) &mnuRatio, NULL},
-	{"Show FPS: ", (int *) &GameConf.m_DisplayFPS, 1, (char *) &mnuYesNo, NULL},
+	{"RACE! for rs90", NULL , NULL, NULL, NULL},
+	{"Scaling: ", (int *) &GameConf.m_ScreenRatio, 1, (char *) &mnuRatio, NULL},
+	//{"Show FPS: ", (int *) &GameConf.m_DisplayFPS, 1, (char *) &mnuYesNo, NULL},
 	// {"Screenshot", NULL, 0, NULL, &menuSaveBmp},
+    //{"Save state", NULL, 0, NULL, &menuLoadState},
+    //{"Load state", NULL, 0, NULL, &menuSaveState},
 	{"Input Settings", NULL, 0, NULL, &screen_showkeymenu},
 	{"Reset", NULL, 0, NULL, &menuReset},
 	// {"Load rom", NULL, 0, NULL, &menuFileBrowse},
@@ -358,13 +361,14 @@ void screen_showmenu(MENU *menu) {
 		int fg_color;
 
 		if(menu->itemCur == i) fg_color = COLOR_ACTIVE_ITEM; else fg_color = COLOR_INACTIVE_ITEM;
-		screen_showitem(SPRX+10, 59+i*15, mi, fg_color);
-		if(menu->itemCur == i) print_string("-", fg_color, COLOR_BG, SPRX+10-12, 59+i*15);
+		screen_showitem(SPRX+10, 29+i*15, mi, fg_color);
+		if(menu->itemCur == i) print_string("-", fg_color, COLOR_BG, SPRX+10-12, 29+i*15);
 	}
 }
 
 // draw default emulator design
 void screen_prepback(SDL_Surface *s, const char *img) {
+    /*
 	// load logo, Convert the image to optimal display format and Free the temporary surface
 	SDL_Surface *temp = IMG_Load(img);
 	SDL_Surface *image = SDL_DisplayFormat(temp);
@@ -374,6 +378,7 @@ void screen_prepback(SDL_Surface *s, const char *img) {
 	SDL_BlitSurface(image, 0, s, 0);
 	// SDL_SoftStretch(image, NULL, s, NULL);
 	SDL_FreeSurface(image);
+    */
 }
 
 // draw main emulator design
@@ -524,10 +529,10 @@ void screen_showmainmenu(MENU *menu) {
 #else
 					sprintf(szVal,"Game:%s",strrchr(gameName,'\\')+1);szVal[(320/6)-2] = '\0'; 
 #endif
-					print_string(szVal, COLOR_LIGHT,COLOR_BG, 8,240-2-10-10);
+					print_string(szVal, COLOR_LIGHT,COLOR_BG, 8,160-2-10-10);
 					sprintf(szVal,"CRC:%08X",gameCRC); 
-					print_string(szVal, COLOR_LIGHT, COLOR_BG,8,240-2-10);
-					if (isSta) print_string("Load state available",COLOR_INFO, COLOR_BG,8+104,240-2-10);
+					print_string(szVal, COLOR_LIGHT, COLOR_BG,8,160-2-10);
+					if (isSta) print_string("Load state available",COLOR_INFO, COLOR_BG,8+104,160-2-10);
 				}
 			}
 		}
@@ -928,6 +933,7 @@ void menuSaveBmp(void) {
 
 // Save current state of game emulated
 void menuSaveState(void) {
+    printf("%s,%d\n",__FILE__,__LINE__);
     char szFile[512];
 	
 	if (cartridge_IsLoaded()) {
@@ -943,6 +949,7 @@ void menuSaveState(void) {
 
 // Load current state of game emulated
 void menuLoadState(void) {
+    printf("%s,%d\n",__FILE__,__LINE__);
     char szFile[512];
 	
 	if (cartridge_IsLoaded()) {
@@ -983,7 +990,7 @@ void system_loadcfg(char *cfg_name) {
     GameConf.OD_Joy[10] = 6;  GameConf.OD_Joy[11] = 6;
    
     GameConf.sndLevel=40;
-    GameConf.m_ScreenRatio=0; // 0 = original show, 1 = 1.5x, 2 = full screen
+    GameConf.m_ScreenRatio=1; // 0 = original show, 1 = 1.5x, 2 = full screen
     GameConf.m_DisplayFPS=0; // 0 = no
 	getcwd(GameConf.current_dir_rom, MAX__PATH);
 }

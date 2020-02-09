@@ -22,8 +22,8 @@
 #define NGPC_SIZEY 152
 
 //render screen
-#define SIZEX	320
-#define SIZEY	240
+#define SIZEX	240
+#define SIZEY	160
 
 //extern unsigned char bwPaletteDirty, spritePaletteDirty, frontPaletteDirty, backPaletteDirty;
 //extern unsigned char bgoowDirty;

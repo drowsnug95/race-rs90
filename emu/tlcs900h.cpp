@@ -8947,9 +8947,9 @@ int ngOverflow = 0;
 #define FRAMESKIP    //undef this to do no FRAME skipping
 
 #ifdef FRAMESKIP
-//#define AUTO_FRAMESKIP
-#define FIXED_FRAMESKIP 0
-#define MAX_SKIPFRAMES 1
+#define AUTO_FRAMESKIP
+//#define FIXED_FRAMESKIP 2
+#define MAX_SKIPFRAMES 5
 #endif
 
 #ifdef AUTO_FRAMESKIP
@@ -8960,7 +8960,7 @@ void tlcs_execute(int cycles)
 {
     int elapsed;
     int hCounter = ngOverflow;
-
+    
 #ifdef FRAMESKIP
 #ifdef FIXED_FRAMESKIP
 
@@ -9024,6 +9024,7 @@ void tlcs_execute(int cycles)
             myGraphicsBlitLine(true);
 #endif
 
+
             ngpSoundExecute();
             hCounter+= 515;
             // now check what needs to be done at the
@@ -9054,12 +9055,13 @@ void tlcs_execute(int cycles)
                 if(frame == 0)
                 {
                     frame = skipFrames;
-                    SDL_Rect numRect = drawNumber(skipFrames, 10, 24);
-                    SDL_UpdateRect(screen, numRect.x, numRect.y, numRect.w, numRect.h);
+                    //SDL_Rect numRect = drawNumber(skipFrames, 10, 24);
+                    //SDL_UpdateRect(screen, numRect.x, numRect.y, numRect.w, numRect.h);
                 }
 #endif
-                else
+                else{
                     --frame;
+                }
             }
 #endif
 
@@ -9071,11 +9073,9 @@ void tlcs_execute(int cycles)
     //graphics_paint();  //paint the screen, if it's dirty
 
     //MHE used to sound update here!?!?
-
     return;
 }
 
-//Flavor, this auto-frameskip code is messed up
 void ngpc_run()
 {
     int currTick=0,lastTick=0;
@@ -9084,6 +9084,7 @@ void ngpc_run()
     unsigned int skipFrames=0;
 #endif
 
+    printf("%s,%d m_bIsActive:%d\n",__FILE__,__LINE__,m_bIsActive);
     while(m_bIsActive)  //should be some way to exit
     {
 #ifndef __GP32__

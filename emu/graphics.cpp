@@ -1541,19 +1541,19 @@ void myGraphicsBlitLine(unsigned char render)
         		    }
 				}
 
-
 	            if(*bgSelect & 0x80)
     	            bgcol = NGPC_TO_SDL16(bgTable[*bgSelect & 0x07]);
         	    else if(bw)
 	                bgcol = NGPC_TO_SDL16(bwTable[0]);
     	        else
         	        bgcol = NGPC_TO_SDL16(bgTable[0]);//maybe 0xFFF?
+                
 
 				x0 = *wndTopLeftX;
 				x1 = x0+*wndSizeX;
 				if (x1>NGPC_SIZEX)
 					x1 = NGPC_SIZEX;
-
+                
 				for (i=x0;i<x1;i++)
 					draw[i] = bgcol;
 
@@ -1580,11 +1580,13 @@ void myGraphicsBlitLine(unsigned char render)
 
 				for (i=0;i<x0;i++)
 					draw[i] = OOWCol;
+                
 				for (i=x1;i<NGPC_SIZEX;i++)
 					draw[i] = OOWCol;
 
 	        }
 #if !defined(__GP32__) && !defined(TARGET_PSP)
+
             SDL_UnlockSurface(screen);
 #endif
         }
@@ -1599,6 +1601,7 @@ void myGraphicsBlitLine(unsigned char render)
         }
         *scanlineY+= 1;
     }
+    
     else if (*scanlineY == 198)
     {
         // stop VBlank period
@@ -1645,8 +1648,9 @@ void myGraphicsBlitLine(unsigned char render)
 
         *scanlineY = 0;
     }
-    else
+    else{
         *scanlineY+= 1;
+    }
 }
 
 

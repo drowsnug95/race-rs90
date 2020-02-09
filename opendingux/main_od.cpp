@@ -35,6 +35,7 @@ unsigned long SDL_UXTimerRead(void) {
 
 void upscale_to_x15(uint32_t *dst, uint32_t *src)
 {
+    printf("%s,%d\n",__FILE__,__LINE__);
 	uint32_t midh = 228 / 2;
 	uint32_t Eh = 0;
 	uint32_t source = 0;
@@ -74,6 +75,7 @@ void upscale_to_x15(uint32_t *dst, uint32_t *src)
 
 void upscale_to_320x240(uint32_t* dst, uint32_t* src)
 {
+    printf("%s,%d\n",__FILE__,__LINE__);
 	uint32_t midh = 240 / 2;
 	uint32_t Eh = 0;
 	uint32_t source = 0;
@@ -114,22 +116,29 @@ void graphics_paint(void) {
 
 	if (SDL_MUSTLOCK(actualScreen)) SDL_LockSurface(actualScreen);
 
-	switch (GameConf.m_ScreenRatio) {
-		case 2: // Full screen
-			upscale_to_320x240((uint32_t*)actualScreen->pixels, (uint32_t*)screen->pixels);
-			break;
-		case 1: // x1.5
-			xfp = (320 - 240) / 2;
-			yfp = (240 - 228) / 2;
-
-			upscale_to_x15((uint32_t*)actualScreen->pixels, (uint32_t*)screen->pixels);
-			break;
+    uint16_t *d,*s;
+	switch (GameConf.m_ScreenRatio) {   
+		case 1: // x1.5 upscale for rs-90
+			d = (uint16_t*)actualScreen->pixels;
+			s = (uint16_t*)screen->pixels;
+			for (int y = 0; y < BLIT_HEIGHT; y++)
+			{
+                for(int x =0; x < 240/3; x++)
+                {
+                    *(d++) = *s;
+                    *(d++) = ((*s & 0xF7DE)>>1) + ((*(s+1) & 0xF7DE)>>1);
+                    *(d++) = *(s+1);
+                    s += 2;
+                }
+                s+=80;
+			}
+            break;
 		default: // Original
 			xfp = (actualScreen->w - BLIT_WIDTH) / 2;
 			yfp = (actualScreen->h - BLIT_HEIGHT) / 2;
 
-			uint16_t *d = (uint16_t*)actualScreen->pixels + xfp + yfp * actualScreen->pitch / 2 ;
-			uint16_t *s = (uint16_t*)screen->pixels;
+			d = (uint16_t*)actualScreen->pixels + xfp + yfp * actualScreen->pitch / 2 ;
+			s = (uint16_t*)screen->pixels;
 			for (int y = 0; y < BLIT_HEIGHT; y++)
 			{
 				memmove(d, s, BLIT_WIDTH * sizeof(uint16_t));
@@ -157,13 +166,14 @@ void graphics_paint(void) {
 }
 
 void initSDL(void) {
+    printf("%s,%d\n",__FILE__,__LINE__);
 	if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) < 0) {
 		fprintf(stderr, "Couldn't initialize SDL: %s\n",SDL_GetError());
 		exit(1);
 	}
 	atexit(SDL_Quit);
 
-	actualScreen = SDL_SetVideoMode(320, 240, 16, SDL_HWSURFACE | 
+	actualScreen = SDL_SetVideoMode(240, 160, 16, SDL_HWSURFACE | 
 	#ifdef SDL_TRIPLEBUF
 		SDL_TRIPLEBUF
 	#else
@@ -244,7 +254,10 @@ int main(int argc, char *argv[]) {
 				break;
 
 			case GF_GAMEINIT:
-				draw_skin(); screen_flip(); screen_flip(); screen_flip();
+				draw_skin();
+                screen_flip();
+                screen_flip();
+                screen_flip();
 				system_sound_chipreset();	//Resets chips
 				handleInputFile(gameName);
 				InitInput(NULL);
@@ -265,9 +278,9 @@ int main(int argc, char *argv[]) {
 				if (wait > 0) {
 					if (wait < 1000000) 
 						usleep(wait);
-				}
-				
-				tlcs_execute((6*1024*1024) / HOST_FPS);
+				}                
+                ngpc_run();
+                //tlcs_execute((6*1024*1024) / HOST_FPS , 2);
 				
 				if (m_bIsActive == FALSE) 
 					m_Flag = GF_MAINUI;

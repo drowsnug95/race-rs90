@@ -442,7 +442,7 @@ void mem_init()
             mainram[0x6F84-0x4000] = 0x40; // "Power On" startup
             mainram[0x6F85-0x4000] = 0x00; // No shutdown request
             mainram[0x6F86-0x4000] = 0x00; // No user answer (?)
-            mainram[0x6F87-0x4000] = 0x01; //English
+            mainram[0x6F87-0x4000] = 0x01; //1:English 0:Japanese (but doesn't change)
         }
 		else
 		{
@@ -488,8 +488,7 @@ void mem_init()
             mainram[0x6F84-0x4000] = 0x40; // "Power On" startup
             mainram[0x6F85-0x4000] = 0x00; // No shutdown request
             mainram[0x6F86-0x4000] = 0x00; // No user answer (?)
-
-            mainram[0x6F87-0x4000] = 0x01; //English
+            mainram[0x6F87-0x4000] = 0x01; //1:English 0:Japanese (?)
 		}
 
         mainram[0x4000] = 0xC0;		// Enable generation of VBlanks by default

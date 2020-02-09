@@ -84,7 +84,8 @@ extern void system_sound_chipreset(void);
 extern void ngpc_run();
 extern void flashShutdown();
 
-extern void tlcs_execute(int cycles);
+//extern void tlcs_execute(int cycles);
+extern void tlcs_execute(int cycles, int skipFrames);
 
 extern void mainemuinit();
 
