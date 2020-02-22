@@ -9025,7 +9025,7 @@ void tlcs_execute(int cycles)
 #endif
 
 
-            ngpSoundExecute();
+            //ngpSoundExecute();
             hCounter+= 515;
             // now check what needs to be done at the
             // beginning of this new line

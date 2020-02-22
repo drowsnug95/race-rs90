@@ -3,6 +3,9 @@
 #OSTYPE=oda320
 OSTYPE=odrs90
 
+#USE_GCOV=YES
+USE_GCOV=APPLY
+
 PRGNAME     = race-od
 
 # define regarding OS, which compiler to use
@@ -49,6 +52,15 @@ endif
 CFLAGS		= -I$(SDL_INCLUDE) -D_OPENDINGUX_ -DZ80 -DTARGET_OD -D_MAX_PATH=2048 -DHOST_FPS=60 $(CC_OPTS)
 CXXFLAGS	= $(CFLAGS) 
 LDFLAGS		= -L$(SDL_LIB) $(CC_OPTS) -lSDL -lz
+endif
+
+ifeq ($(USE_GCOV), YES)
+CFLAGS += -fprofile-generate=/media/data/local/home/profile
+CXXFLAGS += -fprofile-generate=/media/data/local/home/profile
+LDFLAGS += -lgcov -fprofile-generate=/media/data/local/home/profile
+else ifeq ($(USE_GCOV), APPLY)
+CFLAGS		+= -fprofile-use -fbranch-probabilities
+CXXFLAGS		+= -fprofile-use -fbranch-probabilities
 endif
 
 # Files to be compiled

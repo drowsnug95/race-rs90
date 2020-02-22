@@ -48,6 +48,7 @@ typedef struct {
   unsigned int OD_Joy[12]; // each key mapping
   unsigned int m_DisplayFPS;
   char current_dir_rom[MAX__PATH];
+  unsigned int language; ////1:English 0:Japanese
 } gamecfg;
 
 //typedef unsigned char byte;

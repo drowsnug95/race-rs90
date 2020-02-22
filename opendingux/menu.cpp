@@ -181,20 +181,23 @@ typedef struct {
 } MENU;
 
 char mnuYesNo[2][16] = {"No", "Yes" };
-char mnuRatio[3][16] = { "Original", "x1.5" /*, "Full"*/};
+char mnuRatio[3][16] = { "Original", "     4:3","    Full" /*, "Full"*/};
 
 char mnuButtons[7][16] = {
   "Up","Down","Left","Right","But #1","But #2", "Options"
 };
+char mnuLang[2][16] = { "Japanese", " English"};
+
 
 MENUITEM MainMenuItems[] = {
 	{"RACE! for rs90", NULL , NULL, NULL, NULL},
-	{"Scaling: ", (int *) &GameConf.m_ScreenRatio, 1, (char *) &mnuRatio, NULL},
+	{"Scaling:  ", (int *) &GameConf.m_ScreenRatio, 2, (char *) &mnuRatio, NULL},
 	//{"Show FPS: ", (int *) &GameConf.m_DisplayFPS, 1, (char *) &mnuYesNo, NULL},
 	// {"Screenshot", NULL, 0, NULL, &menuSaveBmp},
     //{"Save state", NULL, 0, NULL, &menuLoadState},
     //{"Load state", NULL, 0, NULL, &menuSaveState},
-	{"Input Settings", NULL, 0, NULL, &screen_showkeymenu},
+	{"Language:  ", (int *) &GameConf.language, 1,(char *)mnuLang, NULL},
+    {"Input Settings", NULL, 0, NULL, &screen_showkeymenu},
 	{"Reset", NULL, 0, NULL, &menuReset},
 	// {"Load rom", NULL, 0, NULL, &menuFileBrowse},
 	// {"Continue", NULL, 0, NULL, &menuContinue},
@@ -362,7 +365,7 @@ void screen_showmenu(MENU *menu) {
 
 		if(menu->itemCur == i) fg_color = COLOR_ACTIVE_ITEM; else fg_color = COLOR_INACTIVE_ITEM;
 		screen_showitem(SPRX+10, 29+i*15, mi, fg_color);
-		if(menu->itemCur == i) print_string("-", fg_color, COLOR_BG, SPRX+10-12, 29+i*15);
+		if(menu->itemCur == i) print_string(">", fg_color, COLOR_BG, SPRX+10-12, 29+i*15);
 	}
 }
 
@@ -978,18 +981,21 @@ void system_loadcfg(char *cfg_name) {
   if (fd >= 0) {
 	read(fd, &GameConf, sizeof(GameConf));
     close(fd);
+    printf("Load cfg from %s.\n",cfg_name);
   }
   else {
+      printf("Load cfg failed ->%s. use default settings.\n",cfg_name);
+
   // UP  DOWN  LEFT RIGHT  A  B  X  Y  R  L  START  SELECT
   //  0,    1,    2,    3, 4, 5, 4, 5, 4, 5,     6,      6
     GameConf.OD_Joy[ 0] = 0;  GameConf.OD_Joy[ 1] = 1;
     GameConf.OD_Joy[ 2] = 2;  GameConf.OD_Joy[ 3] = 3;
-    GameConf.OD_Joy[ 4] = 4;  GameConf.OD_Joy[ 5] = 5;
+    GameConf.OD_Joy[ 4] = 5;  GameConf.OD_Joy[ 5] = 4;
     GameConf.OD_Joy[ 6] = 4;  GameConf.OD_Joy[ 7] = 5;
     GameConf.OD_Joy[ 8] = 4;  GameConf.OD_Joy[ 9] = 5;
     GameConf.OD_Joy[10] = 6;  GameConf.OD_Joy[11] = 6;
    
-    GameConf.sndLevel=40;
+    GameConf.sndLevel=50;
     GameConf.m_ScreenRatio=1; // 0 = original show, 1 = 1.5x, 2 = full screen
     GameConf.m_DisplayFPS=0; // 0 = no
 	getcwd(GameConf.current_dir_rom, MAX__PATH);
@@ -999,9 +1005,12 @@ void system_loadcfg(char *cfg_name) {
 void system_savecfg(char *cfg_name) {
   int fd;
   
-  fd = open(cfg_name, O_CREAT | O_RDWR | O_BINARY | O_TRUNC, S_IREAD | S_IWRITE);
-  if (fd >= 0) {
-    write(fd, &GameConf, sizeof(GameConf)); 
-    close(fd);
- }
+    fd = open(cfg_name, O_CREAT | O_RDWR | O_BINARY | O_TRUNC, S_IREAD | S_IWRITE);
+    if (fd >= 0) {
+        write(fd, &GameConf, sizeof(GameConf)); 
+        close(fd);
+        printf("Saved cfg to %s\n",cfg_name);
+    }
+    else
+        printf("Saved cfg failed.\n",cfg_name);
 }

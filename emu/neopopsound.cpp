@@ -609,7 +609,6 @@ int sound_system_init()
 #endif
     fmt.callback = mixaudioCallback;
     fmt.userdata = NULL;
-    fmt.samples = 4096; //for rs-90
 
     /* Open the audio device and start playing sound! */
     if ( SDL_OpenAudio(&fmt, &retFmt) < 0 ) {

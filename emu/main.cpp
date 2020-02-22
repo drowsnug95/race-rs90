@@ -12,6 +12,7 @@
 
 #ifdef TARGET_OD
 #include <SDL/SDL.h>
+#include "../opendingux/shared.h"
 #else
 #ifndef TARGET_PSP
 #include <SDL/SDL.h>
@@ -95,7 +96,11 @@ void mainemuinit()
     // if neogeo pocket color rom, act if we are a neogeo pocket color
     tlcsMemWriteB(0x6F91,tlcsMemReadB(0x00200023));
     // pretend we're running in English mode
-    tlcsMemWriteB(0x00006F87,0x01);
+    if (GameConf.language == 1)
+        tlcsMemWriteB(0x00006F87,0x01);
+    else
+        tlcsMemWriteB(0x00006F87,0x00);
+    
     // kludges & fixes
     switch (tlcsMemReadW(0x00200020))
     {

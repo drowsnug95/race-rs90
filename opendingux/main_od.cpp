@@ -110,6 +110,8 @@ void upscale_to_320x240(uint32_t* dst, uint32_t* src)
 	}
 }
 
+#define RSHIFT(X) (((X) & 0xF7DE) >>1)
+
 void graphics_paint(void) {
 	unsigned int xfp = 1,yfp = 1;
 	static char buffer[32];
@@ -117,8 +119,31 @@ void graphics_paint(void) {
 	if (SDL_MUSTLOCK(actualScreen)) SDL_LockSurface(actualScreen);
 
     uint16_t *d,*s;
-	switch (GameConf.m_ScreenRatio) {   
-		case 1: // x1.5 upscale for rs-90
+	switch (GameConf.m_ScreenRatio) {
+        case 1:
+            d = (uint16_t*)actualScreen->pixels;
+			s = (uint16_t*)screen->pixels;
+			for (int y = 0; y < BLIT_HEIGHT; y++)
+			{
+                d+=14;
+                for(int x =0; x < 212/4; x++)
+                {
+                    const uint16_t a=RSHIFT(*s);
+                    const uint16_t b=RSHIFT(*(s+1));
+                    const uint16_t c=RSHIFT(*(s+2));
+                    *(d++) = a<<1;
+                    *(d++) = b + RSHIFT(a + RSHIFT(a + b));
+                    *(d++) = b + RSHIFT(b + RSHIFT(b + c));
+                    *(d++) = c<<1;
+                    s += 3;
+                }
+                *d = RSHIFT(*s)<<1;
+                d+=14;
+                s+=81;
+			}
+            break;
+            
+		case 2: // x1.5 upscale for rs-90
 			d = (uint16_t*)actualScreen->pixels;
 			s = (uint16_t*)screen->pixels;
 			for (int y = 0; y < BLIT_HEIGHT; y++)
@@ -126,7 +151,7 @@ void graphics_paint(void) {
                 for(int x =0; x < 240/3; x++)
                 {
                     *(d++) = *s;
-                    *(d++) = ((*s & 0xF7DE)>>1) + ((*(s+1) & 0xF7DE)>>1);
+                    *(d++) = RSHIFT(*s) + RSHIFT(*(s+1));
                     *(d++) = *(s+1);
                     s += 2;
                 }
@@ -224,8 +249,9 @@ int main(int argc, char *argv[]) {
 	double period;
 
 	// Get init file directory & name
-	snprintf(current_conf_app, sizeof(current_conf_app), "%s/.race-od", getenv("HOME")); mkdir(current_conf_app, 0777);
-	sprintf(current_conf_app,"%s/race.cfg", current_conf_app);
+	sprintf(current_conf_app, "%s/.race-od", getenv("HOME"));
+    mkdir(current_conf_app, 0777);
+	sprintf(current_conf_app,"%s/.race-od/race.cfg", getenv("HOME"));
 	
 	// Init graphics & sound
 	initSDL();
