@@ -109,6 +109,9 @@ void upscale_to_320x240(uint32_t* dst, uint32_t* src)
 }
 
 #define RSHIFT(X) (((X) & 0xF7DE) >>1)
+#define RMASK 0b1111100000000000;
+#define GMASK 0b0000011111100000;
+#define BMASK 0b0000000000011111;
 
 void graphics_paint(void) {
 	unsigned int xfp = 1,yfp = 1;
@@ -166,11 +169,11 @@ void graphics_paint(void) {
                 for(int x =0; x < 212/4; x++)
                 {
                     uint16_t r0,r1,g1,b1,b2;
-                    r0 = *s     & 0b1111100000000000;
-                    g1 = *(s+1) & 0b0000011111000000;
-                    b1 = *(s+1) & 0b0000000000011111;  
-                    r1 = *(s+1) & 0b1111100000000000;
-                    b2 = *(s+2) & 0b0000000000011111;  
+                    r0 = *s     & RMASK;
+                    g1 = *(s+1) & GMASK;
+                    b1 = *(s+1) & BMASK;  
+                    r1 = *(s+1) & RMASK;
+                    b2 = *(s+2) & BMASK;  
                     *(d++) = *s;
                     *(d++) = r0 | g1 | b1;
                     *(d++) = r1 | g1 | b2;
@@ -191,16 +194,18 @@ void graphics_paint(void) {
                 for(int x =0; x < 240/3; x++)
                 {
                     *(d++) = *s;
+                    
                     uint16_t r0,g0,g1,b1,R,G,B;
-                    r0 = *s & 0b1111100000000000;
-                    g0 = *s & 0b0000011111000000;
-                    g1= *(s+1) & 0b0000011111000000;
-                    b1 = *(s+1) & 0b0000000000011111;
+                    r0 = *s &     RMASK;
+                    g0 = *s &     GMASK;
+                    g1 = *(s+1) & GMASK;
+                    b1 = *(s+1) & BMASK;
 
                     R = r0;
-                    G = (g0 + g1)>>1;
+                    G = ((g0 + g1)>>1) & GMASK;
                     B = b1;
                     *(d++) = R | G | B;
+                    
                     *(d++) = *(s+1);
                     s += 2;
                 }
