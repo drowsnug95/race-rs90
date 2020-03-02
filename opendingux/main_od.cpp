@@ -35,7 +35,6 @@ unsigned long SDL_UXTimerRead(void) {
 
 void upscale_to_x15(uint32_t *dst, uint32_t *src)
 {
-    printf("%s,%d\n",__FILE__,__LINE__);
 	uint32_t midh = 228 / 2;
 	uint32_t Eh = 0;
 	uint32_t source = 0;
@@ -75,7 +74,6 @@ void upscale_to_x15(uint32_t *dst, uint32_t *src)
 
 void upscale_to_320x240(uint32_t* dst, uint32_t* src)
 {
-    printf("%s,%d\n",__FILE__,__LINE__);
 	uint32_t midh = 240 / 2;
 	uint32_t Eh = 0;
 	uint32_t source = 0;
@@ -120,7 +118,7 @@ void graphics_paint(void) {
 
     uint16_t *d,*s;
 	switch (GameConf.m_ScreenRatio) {
-        case 1:
+        case 1: //Full Screen (blurry)
             d = (uint16_t*)actualScreen->pixels;
 			s = (uint16_t*)screen->pixels;
 			for (int y = 0; y < BLIT_HEIGHT; y++)
@@ -143,7 +141,7 @@ void graphics_paint(void) {
 			}
             break;
             
-		case 2: // x1.5 upscale for rs-90
+		case 2: // x1.5 upscale for rs-90 (Blurry)
 			d = (uint16_t*)actualScreen->pixels;
 			s = (uint16_t*)screen->pixels;
 			for (int y = 0; y < BLIT_HEIGHT; y++)
@@ -152,6 +150,57 @@ void graphics_paint(void) {
                 {
                     *(d++) = *s;
                     *(d++) = RSHIFT(*s) + RSHIFT(*(s+1));
+                    *(d++) = *(s+1);
+                    s += 2;
+                }
+                s+=80;
+			}
+            break;
+
+        case 3: //NEW Full Screen (Sub-pixel math)
+            d = (uint16_t*)actualScreen->pixels;
+			s = (uint16_t*)screen->pixels;
+			for (int y = 0; y < BLIT_HEIGHT; y++)
+			{
+                d+=14;
+                for(int x =0; x < 212/4; x++)
+                {
+                    uint16_t r0,r1,g1,b1,b2;
+                    r0 = *s     & 0b1111100000000000;
+                    g1 = *(s+1) & 0b0000011111000000;
+                    b1 = *(s+1) & 0b0000000000011111;  
+                    r1 = *(s+1) & 0b1111100000000000;
+                    b2 = *(s+2) & 0b0000000000011111;  
+                    *(d++) = *s;
+                    *(d++) = r0 | g1 | b1;
+                    *(d++) = r1 | g1 | b2;
+                    *(d++) = *(s+2);
+                    s += 3;
+                }
+                *d = *s;
+                d+=14;
+                s+=81;
+			}
+            break;
+            
+		case 4: // NEW x1.5 upscale for rs-90 (Sub-pixel math)
+			d = (uint16_t*)actualScreen->pixels;
+			s = (uint16_t*)screen->pixels;
+			for (int y = 0; y < BLIT_HEIGHT; y++)
+			{
+                for(int x =0; x < 240/3; x++)
+                {
+                    *(d++) = *s;
+                    uint16_t r0,g0,g1,b1,R,G,B;
+                    r0 = *s & 0b1111100000000000;
+                    g0 = *s & 0b0000011111000000;
+                    g1= *(s+1) & 0b0000011111000000;
+                    b1 = *(s+1) & 0b0000000000011111;
+
+                    R = r0;
+                    G = (g0 + g1)>>1;
+                    B = b1;
+                    *(d++) = R | G | B;
                     *(d++) = *(s+1);
                     s += 2;
                 }

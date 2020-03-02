@@ -181,7 +181,7 @@ typedef struct {
 } MENU;
 
 char mnuYesNo[2][16] = {"No", "Yes" };
-char mnuRatio[3][16] = { "Original", "     4:3","    Full" /*, "Full"*/};
+char mnuRatio[5][16] = { "Original", "     4:3","    Full"," New 4:3", "New Full"};
 
 char mnuButtons[7][16] = {
   "Up","Down","Left","Right","But #1","But #2", "Options"
@@ -191,7 +191,7 @@ char mnuLang[2][16] = { "Japanese", " English"};
 
 MENUITEM MainMenuItems[] = {
 	{"RACE! for rs90", NULL , NULL, NULL, NULL},
-	{"Scaling:  ", (int *) &GameConf.m_ScreenRatio, 2, (char *) &mnuRatio, NULL},
+	{"Scaling:  ", (int *) &GameConf.m_ScreenRatio, 4, (char *) &mnuRatio, NULL},
 	//{"Show FPS: ", (int *) &GameConf.m_DisplayFPS, 1, (char *) &mnuYesNo, NULL},
 	// {"Screenshot", NULL, 0, NULL, &menuSaveBmp},
     //{"Save state", NULL, 0, NULL, &menuLoadState},
